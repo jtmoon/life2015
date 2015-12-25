@@ -76,6 +76,9 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	/**
+	 * Sets the context for the game. Responsible for rendering the game.
+	 */
 	var Life = function Life(overrides) {
 	  function drawCells(cells) {
 	    cells.forEach(function (cell) {
@@ -87,12 +90,19 @@
 	    });
 	  }
 
+	  /**
+	   * Process a step in time by triggering a step in time on the board and
+	   * update the rendering.
+	   * @return Void
+	   */
 	  function step(timestamp) {
 	    if (!start) {
 	      start = timestamp;
 	    }
 
-	    if (timestamp - start >= 100) {
+	    var singleFrameRate = 1000 / config.fps;
+
+	    if (timestamp - start >= singleFrameRate) {
 	      drawCells(board.tick());
 	      start = timestamp;
 	    }
@@ -100,6 +110,7 @@
 	    window.requestAnimationFrame(step);
 	  }
 
+	  // Update the configuration with the provided overrides.
 	  var config = Object.assign({
 	    colors: {
 	      live: '#D0EAF7',
@@ -111,6 +122,7 @@
 	    fps: 60
 	  }, overrides);
 
+	  // Store the canvas and context for drawing.
 	  var canvas = document.getElementById(config.id);
 	  var context = canvas.getContext('2d');
 
@@ -120,6 +132,7 @@
 
 	  var boardConfig = Object.assign({}, overrides);
 
+	  // Calculate cells per row and column.
 	  if (config.fullscreen) {
 	    boardConfig.cellsPerRow = Math.ceil(window.innerWidth / (cellSize + cellMargin));
 	    boardConfig.cellsPerColumn = Math.ceil(window.innerHeight / (cellSize + cellMargin));
@@ -131,10 +144,13 @@
 	    boardConfig.cellsPerColumn = Math.ceil(canvas.height / (cellSize + cellMargin));
 	  }
 
+	  // Instatiate a board with the provided overrides.
 	  var board = (0, _board2.default)(boardConfig);
 
+	  // Render the initial state of the board.
 	  drawCells(board.getCells());
 
+	  // Start the animation.
 	  window.requestAnimationFrame(step);
 	};
 
@@ -343,6 +359,9 @@
 	});
 	var ATTR_POSITION_X = 'x';
 	var ATTR_POSITION_Y = 'y';
+
+	// Default configuration for the cell. `conditions` determines how many
+	// living neighbors result in the cell living or dying.
 	var config = {
 	  cellSize: 10,
 	  cellMargin: 2,
@@ -357,8 +376,19 @@
 	  }
 	};
 
+	/**
+	 * A cell is responsible for:
+	 * 1) Preserving its own state of alive or dead.
+	 * 2) Evaluating if it needs to live or die.
+	 * A cell is isolated and has no awareness of its surroundings.
+	 * It relies on the board to notify it of changes that affect it.
+	 */
 	var Cell = function Cell(overrides) {
+
+	  // Update the configuration with the provided overrides.
 	  var cellConfig = Object.assign(config, overrides);
+
+	  // Store the `x` and `y` values.
 	  var position = new Map().set(ATTR_POSITION_X, 0).set(ATTR_POSITION_Y, 0);
 	  var isAlive = false;
 	  var willLive = false;
@@ -391,17 +421,39 @@
 	    getPosition: function getPosition() {
 	      return position;
 	    },
+
+	    /**
+	     * Change the cell's state to dead.
+	     * @return Void
+	     */
 	    kill: function kill() {
 	      this.setIsAlive(false);
 	      this.setWillLive(false);
 	    },
+
+	    /**
+	     * Change the cell's state to alive.
+	     * @return Void
+	     */
 	    revive: function revive() {
 	      this.setIsAlive(true);
 	      this.setWillLive(false);
 	    },
+
+	    /**
+	     * Determine if the cell will live based on the number of
+	     * living neighbors.
+	     * @param Number livingNeighbors
+	     * @return Void
+	     */
 	    evaluate: function evaluate(livingNeighbors) {
 	      willLive = isAlive ? cellConfig.conditions.alive.hasOwnProperty(livingNeighbors) : cellConfig.conditions.dead.hasOwnProperty(livingNeighbors);
 	    },
+
+	    /**
+	     * Update the state of the cell.
+	     * @return Void
+	     */
 	    update: function update() {
 	      if (willLive) {
 	        this.revive();

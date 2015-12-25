@@ -9,6 +9,11 @@ const Board = (overrides) => {
       randomPercentage: 0
     }, overrides)
 
+  /**
+   * Calculate the `x` and `y` position of a cell based on the provided index.
+   * @param Number index
+   * @return Map
+   */
   function calculateCellPosition(index) {
     const position = new Map()
 
@@ -23,6 +28,11 @@ const Board = (overrides) => {
     return position
   }
 
+  /**
+   * Calculate the index of a cell in the cells array using the provided position.
+   * @param Map position
+   * @return Number
+   */
   function calculateCellIndex(position) {
 
     // We can use the formula we used to determine the x and y in
@@ -35,6 +45,11 @@ const Board = (overrides) => {
     return cellIndex
   }
 
+  /**
+   * Find the neighbors of a target cell.
+   * @param Cell cell
+   * @return Array
+   */
   function getNeighbors(cell) {
     let neighbors = [];
 
@@ -156,6 +171,8 @@ const Board = (overrides) => {
       // Iterate each cell and evaluate to determine if the cell should live or die.
       cells.forEach((cell) => {
         let neighbors = getNeighbors(cell)
+
+        // Filter neighbors to get living neighbors.
         let livingNeighbors = neighbors.filter((neighbor) => {
           return neighbor.getIsAlive()
         })
@@ -167,6 +184,7 @@ const Board = (overrides) => {
         }
       })
 
+      // Iterate updated cells and update their state.
       updatedCells.forEach((cell) => {
         cell.update()
       })
